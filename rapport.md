@@ -107,6 +107,7 @@ It nearly doubles the size of the index. Since every summary field of each docum
 ```json
 GET cacm_standard/_search
 {
+  "size": 0,
   "aggs": {
     "most_published_author": {
       "terms": {
@@ -127,6 +128,7 @@ Request:
 ```json
 GET cacm_standard/_search
 {
+  "size": 0,
   "aggs": {
     "top_ten_terms_in_title": {
       "terms": {
@@ -411,3 +413,37 @@ PUT /cacm_standard_custom2
   }
 }
 ```
+
+### D.9
+
+Whitespace: Breaks text into terms each time a whitespace is met. No lowercase filter is applied by default, so terms are stored as identically as they appear in the text.
+
+English: Applies a set of filters regarding english language. In addition to the lowercase filter (which format every characters to lowercase), the filters consist of stem words (Like "magic" is a stem word for "magical" and "magically"), stop words (like "the", "is", ...), and possessive stem words (like "boy" is the possessive stem word of "boy's"). These filters are specific to the language they are set. In our case, those filters are specific to english only.
+
+Custom Standard 1: The standard analyzer applies some basic filters like lowercase, stopwords and removing punctuation. To those filters we added a shingle one that will group words by group of 2 in addition to every isolated terms. For example "Hello World" will produce \["hello", "world", "hello world"\].
+
+Custom Standard 2: The same as before, but here we added a custom list of stop words. We also set shingles to be of size 3 and exclusively of size 3. For example "It is raining" will produce \["it is raining"\]
+
+#### D.10
+
+| Analyzer         	   | Number of indexed doc | Number of indexed terms in summary | Size of index | Time for indexing |
+| :------------------  | :-------------------: | :--------------------------------: | :-----------: | :---------------: |
+|`whitespace`  		   | 3202				   | 15653								| 1.78mb		| 298				|
+|`english`	   		   | 3202				   | 5221								| 1.48mb		| 665				|
+|shingle 1-2    	   | 3202				   | 78925								| 3.3 mb		| 677				|
+|shingle 3 + stop words| 3202				   | 123158								| 3.63mb		| 420				|
+
+Heres the top ten terms for each analyzer
+
+| N°     | `whitespace` | `english` | shingle 1-2 | shingle 3 + stop words |
+| :----: | :----------- | :-------- | :---------- | :--------------------- |
+|1		 |`of`			|`which`    |`the`	 	  |`in this paper` 		   |
+|2		 |`the`			|`us`		|`of` 	 	  |`the use of`    		   |
+|3		 |`is`			|`comput`   |`a`  	 	  |`the number of` 		   |
+|4		 |`and`			|`program`  |`is` 	 	  |`it is shown`   		   |
+|5		 |`a`			|`system`   |`and`	 	  |`a set of`      		   |
+|6		 |`to`			|`present`  |`to`  	 	  |`in terms of`   		   |
+|7		 |`in`			|`describ`  |`in` 	 	  |`the problem of`	   	   |
+|8		 |`for`			|`paper`    |`for`	 	  |`is shown that` 		   |
+|9		 |`The`			|`can`		|`are`	 	  |`a number of`   	   	   |
+|10		 |`are`			|`gener`    |`of the`	  |`as well as`    		   |

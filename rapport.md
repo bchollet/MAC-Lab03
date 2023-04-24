@@ -184,3 +184,230 @@ Note that the term frequency is found under the property "doc_count"
 	}
 ]
 ```
+
+## Using different Analyzers
+
+### D.8
+
+Whitespace analyzer
+
+```json
+PUT /cacm_whitespace
+{
+  "settings": {
+    "analysis": {
+      "analyzer": {
+        "whitespace_analyzer":{
+          "tokenizer": "whitespace",
+          "filter": []
+        }
+      }
+    }
+  }, 
+  "mappings": {
+    "properties": {
+      "id": {
+        "type":"unsigned_long",
+        "index":false
+      },
+      "authors": {
+        "type": "keyword"
+      },
+      "title": {
+        "type": "text",
+		    "fielddata": true,
+		    "analyzer": "whitespace_analyzer"
+      },
+      "date": {
+        "type": "date"
+      },
+      "summary": {
+        "type": "text",
+        "fielddata": true,
+        "index_options": "offsets",
+		    "analyzer": "whitespace_analyzer"
+      }
+    }
+  }
+}
+```
+
+English analyzer
+
+```json
+PUT /cacm_english
+{
+  "settings": {
+    "analysis": {
+      "filter": {
+        "english_stop": {
+          "type": "stop",
+          "stopwords": "_english_" 
+        },
+        "english_keywords": {
+          "type": "keyword_marker",
+          "keywords": [] 
+        },
+        "english_stemmer": {
+          "type": "stemmer",
+          "language": "english"
+        },
+        "english_possessive_stemmer": {
+          "type": "stemmer",
+          "language": "possessive_english"
+        }
+      },
+      "analyzer": {
+        "english_analyzer": {
+          "tokenizer": "standard",
+          "filter": [
+            "english_possessive_stemmer",
+            "lowercase",
+            "english_stop",
+            "english_keywords",
+            "english_stemmer"
+          ]
+        }
+      }
+    }
+  }, 
+  "mappings": {
+    "properties": {
+      "id": {
+        "type":"unsigned_long",
+        "index":false
+      },
+      "authors": {
+        "type": "keyword"
+      },
+      "title": {
+        "type": "text",
+		    "fielddata": true,
+		    "analyzer": "english_analyzer"
+      },
+      "date": {
+        "type": "date"
+      },
+      "summary": {
+        "type": "text",
+        "fielddata": true,
+        "index_options": "offsets",
+		    "analyzer": "english_analyzer"
+      }
+    }
+  }
+}
+``` 
+
+Custom with lowercase filter, standard tokenizer and output shingles of size 1 and 2
+
+```json
+PUT /cacm_standard_custom1
+{
+  "settings": {
+    "analysis": {
+      "filter": {
+        "shingle_custom1" : {
+          "type": "shingle",
+          "min_shingle_size": 2,
+          "max_shingle_size": 2,
+          "output_unigrams": true
+        }
+      }, 
+      "analyzer": {
+        "standard_custom1_analyzer": {
+          "tokenizer": "standard",
+          "filter": [
+            "lowercase",
+            "shingle_custom1"
+          ]
+        }
+      }
+    }
+  }, 
+  "mappings": {
+    "properties": {
+      "id": {
+        "type":"unsigned_long",
+        "index":false
+      },
+      "authors": {
+        "type": "keyword"
+      },
+      "title": {
+        "type": "text",
+		    "fielddata": true,
+		    "analyzer": "standard_custom1_analyzer"
+      },
+      "date": {
+        "type": "date"
+      },
+      "summary": {
+        "type": "text",
+        "fielddata": true,
+        "index_options": "offsets",
+		    "analyzer": "standard_custom1_analyzer"
+      }
+    }
+  }
+}
+```
+
+Custom with lowercase filter, standard tokenizer and output shingles of size 3 and custom stop words
+
+```json
+PUT /cacm_standard_custom2
+{
+  "settings": {
+    "analysis": {
+      "filter": {
+        "shingle_custom2" : {
+          "type": "shingle",
+          "min_shingle_size": 3,
+          "max_shingle_size": 3,
+          "output_unigrams": false
+        },
+        "stop_custom2": {
+          "type": "stop",
+          "stopwords_path": "data/common_words.txt"
+        }
+      }, 
+      "analyzer": {
+        "standard_custom2_analyzer": {
+          "tokenizer": "standard",
+          "filter": [
+            "lowercase",
+            "shingle_custom2",
+            "stop_custom2"
+          ]
+        }
+      }
+    }
+  }, 
+  "mappings": {
+    "properties": {
+      "id": {
+        "type":"unsigned_long",
+        "index":false
+      },
+      "authors": {
+        "type": "keyword"
+      },
+      "title": {
+        "type": "text",
+		    "fielddata": true,
+		    "analyzer": "standard_custom2_analyzer"
+      },
+      "date": {
+        "type": "date"
+      },
+      "summary": {
+        "type": "text",
+        "fielddata": true,
+        "index_options": "offsets",
+		    "analyzer": "standard_custom2_analyzer"
+      }
+    }
+  }
+}
+```

@@ -355,7 +355,7 @@ PUT /cacm_standard_custom1
 }
 ```
 
-Custom with lowercase filter, standard tokenizer and output shingles of size 3 and custom stop words
+Custom with lowercase filter, standard tokenizer and output shingles of size 3
 
 ```json
 PUT /cacm_standard_custom2
@@ -368,19 +368,14 @@ PUT /cacm_standard_custom2
           "min_shingle_size": 3,
           "max_shingle_size": 3,
           "output_unigrams": false
-        },
-        "stop_custom2": {
-          "type": "stop",
-          "stopwords_path": "data/common_words.txt"
         }
-      }, 
+      },
       "analyzer": {
         "standard_custom2_analyzer": {
           "tokenizer": "standard",
           "filter": [
             "lowercase",
-            "shingle_custom2",
-            "stop_custom2"
+            "shingle_custom2"
           ]
         }
       }
@@ -414,6 +409,49 @@ PUT /cacm_standard_custom2
 }
 ```
 
+Stop analyzer with custom stop words
+
+```json
+PUT /cacm_stop
+{
+  "settings": {
+    "analysis": {
+      "analyzer": {
+        "stop_analyzer": {
+          "type": "stop",
+          "stopwords_path": "data/common_words.txt"
+        }
+      }
+    }
+  }, 
+  "mappings": {
+    "properties": {
+      "id": {
+        "type":"unsigned_long",
+        "index":false
+      },
+      "authors": {
+        "type": "keyword"
+      },
+      "title": {
+        "type": "text",
+		    "fielddata": true,
+		    "analyzer": "stop_analyzer"
+      },
+      "date": {
+        "type": "date"
+      },
+      "summary": {
+        "type": "text",
+        "fielddata": true,
+        "index_options": "offsets",
+		    "analyzer": "stop_analyzer"
+      }
+    }
+  }
+}
+```
+
 ### D.9
 
 Whitespace: Breaks text into terms each time a whitespace is met. No lowercase filter is applied by default, so terms are stored as identically as they appear in the text.
@@ -422,28 +460,32 @@ English: Applies a set of filters regarding english language. In addition to the
 
 Custom Standard 1: The standard analyzer applies some basic filters like lowercase, stopwords and removing punctuation. To those filters we added a shingle one that will group words by group of 2 in addition to every isolated terms. For example "Hello World" will produce \["hello", "world", "hello world"\].
 
-Custom Standard 2: The same as before, but here we added a custom list of stop words. We also set shingles to be of size 3 and exclusively of size 3. For example "It is raining" will produce \["it is raining"\]
+Custom Standard 2: The same as before, but here we set shingles to be of size 3 and exclusively of size 3. For example "It is raining" will produce \["it is raining"\]
+
+Stop analyzer: It is a combination of the simple analyzer which breaks the text into token at any non-letter character (numbers, space, hyphen, apostrophes), discards non-letter characters and apply a lowercase filter. In addition to this, the stop analyzer allow a list of words that should not be indexed, these words are called stop words.
+
 
 #### D.10
 
 | Analyzer         	   | Number of indexed doc | Number of indexed terms in summary | Size of index | Time for indexing |
 | :------------------  | :-------------------: | :--------------------------------: | :-----------: | :---------------: |
-|`whitespace`  		   | 3202				   | 15653								| 1.78mb		| 298				|
-|`english`	   		   | 3202				   | 5221								| 1.48mb		| 665				|
-|shingle 1-2    	   | 3202				   | 78925								| 3.3 mb		| 677				|
-|shingle 3 + stop words| 3202				   | 123158								| 3.63mb		| 420				|
+|`whitespace`  		   | 3202				   | 103275								| 1.78mb		| 298				|
+|`english`	   		   | 3202				   | 72298								| 1.48mb		| 665				|
+|shingle 1-2    	   | 3202				   | 237189								| 3.3 mb		| 677				|
+|shingle 3 			   | 3202				   | 144518								| 3.63mb		| 968				|
+|`stop`				   | 3202				   | 59988								| 1.48mb		| 787				|
 
 Heres the top ten terms for each analyzer
 
-| N°     | `whitespace` | `english` | shingle 1-2 | shingle 3 + stop words |
-| :----: | :----------- | :-------- | :---------- | :--------------------- |
-|1		 |`of`			|`which`    |`the`	 	  |`in this paper` 		   |
-|2		 |`the`			|`us`		|`of` 	 	  |`the use of`    		   |
-|3		 |`is`			|`comput`   |`a`  	 	  |`the number of` 		   |
-|4		 |`and`			|`program`  |`is` 	 	  |`it is shown`   		   |
-|5		 |`a`			|`system`   |`and`	 	  |`a set of`      		   |
-|6		 |`to`			|`present`  |`to`  	 	  |`in terms of`   		   |
-|7		 |`in`			|`describ`  |`in` 	 	  |`the problem of`	   	   |
-|8		 |`for`			|`paper`    |`for`	 	  |`is shown that` 		   |
-|9		 |`The`			|`can`		|`are`	 	  |`a number of`   	   	   |
-|10		 |`are`			|`gener`    |`of the`	  |`as well as`    		   |
+| N°     | `whitespace` | `english` | shingle 1-2 | shingle 3 			   | `stop` 	 |
+| :----: | :----------- | :-------- | :---------- | :--------------------- | :---------- |
+|1		 |`of`			|`which`    |`the`	 	  |`in this paper` 		   | `computer`  |
+|2		 |`the`			|`us`		|`of` 	 	  |`the use of`    		   | `system`	 |
+|3		 |`is`			|`comput`   |`a`  	 	  |`the number of` 		   | `paper`	 |
+|4		 |`and`			|`program`  |`is` 	 	  |`it is shown`   		   | `presented` |
+|5		 |`a`			|`system`   |`and`	 	  |`a set of`      		   | `time`	  	 |
+|6		 |`to`			|`present`  |`to`  	 	  |`in terms of`   		   | `program`	 |
+|7		 |`in`			|`describ`  |`in` 	 	  |`the problem of`	   	   | `data`	  	 |
+|8		 |`for`			|`paper`    |`for`	 	  |`is shown that` 		   | `method`	 |
+|9		 |`The`			|`can`		|`are`	 	  |`a number of`   	   	   | `algorithm` |
+|10		 |`are`			|`gener`    |`of the`	  |`as well as`    		   | `discussed` |

@@ -582,3 +582,81 @@ Numbers of publications
 3) 135
 4) 205
 5) 30
+
+## Tuning the Lucene score
+
+### D.14
+
+```json
+PUT /cacm_lucene
+{
+  "settings": {
+    "number_of_shards": 1,
+    "similarity": {
+      "scripted_tfidf": {
+        "type": "scripted",
+        "script": {
+          "source": "double tf = 1 + Math.log(doc.freq); double idf = Math.log((field.docCount)/(term.docFreq+1.0)) + 1.0; double norm = 1; return query.boost * tf * idf * norm;"
+        }
+      }
+    }
+  },
+  "mappings": {
+    "properties": {
+      "id": {
+        "type":"unsigned_long",
+        "index":false
+      },
+      "authors": {
+        "type": "keyword"
+      },
+      "title": {
+        "type": "text",
+		    "fielddata": true,
+		    "similarity": "scripted_tfidf"
+      },
+      "date": {
+        "type": "date"
+      },
+      "summary": {
+        "type": "text",
+        "fielddata": true,
+        "index_options": "offsets",
+        "similarity": "scripted_tfidf"
+      }
+    }
+  }
+}
+```
+
+### D.15
+
+Default similarity function
+
+| N° 	| docId  | Score     |
+| :---- | :----: | :-------: |
+| 1  	| 123    | 7.0958896 |
+| 2  	| 678	 | 7.0101233 |
+| 3  	| 3189	 | 6.957088  |
+| 4  	| 1465	 | 6.926655  |
+| 5  	| 1739	 | 6.7396317 |
+| 6  	| 1647	 | 6.4866796 |
+| 7  	| 2534	 | 6.4402065 |
+| 8  	| 2423 	 | 6.1307526 |
+| 9  	| 598	 | 6.0692043 |
+| 10 	| 1215	 | 5.9121494 |
+
+Custom similarity function
+
+| N° 	| docId  | Score      |
+| :---- | :----: | :--------: |
+| 1  	| 2534   | 14.1800995 |
+| 2  	| 1647	 | 12.428032  |
+| 3  	| 1739	 | 11.304348  |
+| 4  	| 2423	 | 11.304348  |
+| 5  	| 123	 | 11.234488  |
+| 6  	| 678	 | 11.234488  |
+| 7  	| 1465	 | 11.234488  |
+| 8  	| 1215 	 | 9.900334   |
+| 9  	| 2897	 | 9.900334   |
+| 10 	| 1542	 | 9.552281   |

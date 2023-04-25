@@ -465,7 +465,7 @@ Custom Standard 2: The same as before, but here we set shingles to be of size 3 
 Stop analyzer: It is a combination of the simple analyzer which breaks the text into token at any non-letter character (numbers, space, hyphen, apostrophes), discards non-letter characters and apply a lowercase filter. In addition to this, the stop analyzer allow a list of words that should not be indexed, these words are called stop words.
 
 
-#### D.10
+### D.10
 
 | Analyzer         	   | Number of indexed doc | Number of indexed terms in summary | Size of index | Time for indexing |
 | :------------------  | :-------------------: | :--------------------------------: | :-----------: | :---------------: |
@@ -489,3 +489,96 @@ Heres the top ten terms for each analyzer
 |8		 |`for`			|`paper`    |`for`	 	  |`is shown that` 		   | `method`	 |
 |9		 |`The`			|`can`		|`are`	 	  |`a number of`   	   	   | `algorithm` |
 |10		 |`are`			|`gener`    |`of the`	  |`as well as`    		   | `discussed` |
+
+### D.11
+
+Conclusions
+
+1) The `stop` and `english` analyzer are the only ones that indexed words that are relevant to the subject of the articles. The top 10 terms for each one let you guess the subject of most articles (Here, computer science articles).
+
+2) Shingles can significantly increase the number of indexed terms. Especially if we combine shingle together like unigrams and biwords.
+
+3) The use of stopwords filter significantly changes the number of indexed terms as well as the most frequent ones.
+
+## Searching
+
+### D.12
+
+Requests of query_string search
+
+1)
+```json
+GET /cacm_english/_search?filter_path=hits.hits._source.id,hits.total.value&size=3202&track_total_hits=true
+{
+  "query": {
+    "query_string": {
+      "type": "phrase",
+      "query": "Information Retrieval",
+      "fields": ["summary"]
+    }
+  }
+}
+```
+
+2)
+```json
+GET /cacm_english/_search?filter_path=hits.hits._source.id,hits.total.value&size=3202&track_total_hits=true
+{
+  "query": {
+    "query_string": {
+      "query": "(Information) AND (Retrieval)",
+      "fields": ["summary"]
+    }
+  }
+}
+```
+
+3)
+```json
+GET /cacm_english/_search?filter_path=hits.hits._source.id,hits.total.value&size=3202&track_total_hits=true
+{
+  "query": {
+    "query_string": {
+      "query": "+Information Retrieval -Data",
+      "fields": ["summary"]
+    }
+  }
+}
+```
+
+4)
+```json
+GET /cacm_english/_search?filter_path=hits.hits._source.id,hits.total.value&size=3202&track_total_hits=true
+{
+  "query": {
+    "query_string": {
+      "query": "Info*",
+      "fields": ["summary"]
+    }
+  }
+}
+```
+
+5)
+```json
+GET /cacm_english/_search?filter_path=hits.hits._source.id,hits.total.value&size=3202&track_total_hits=true
+{
+  "query": {
+    "query_string": {
+      "type": "phrase",
+      "query": "Information Retrieval",
+      "fields": ["summary"],
+      "phrase_slop": 5
+    }
+  }
+}
+```
+### D.13
+
+Numbers of publications
+
+1) 20
+2) 36
+3) 135
+4) 205
+5) 30

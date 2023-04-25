@@ -660,3 +660,29 @@ Custom similarity function
 | 8  	| 1215 	 | 9.900334   |
 | 9  	| 2897	 | 9.900334   |
 | 10 	| 1542	 | 9.552281   |
+
+### D.16
+
+```json
+GET cacm_lucene/_search
+{
+  "query": {
+    "function_score": {
+      "query": {
+        "query_string": {
+          "fields": ["summary"], 
+          "query": "compiler program"
+        }
+      },
+      "linear": {
+        "date": {
+          "origin": "1970-01-01",
+          "scale": "90d",
+          "decay": 0.5
+        }
+      }
+    }
+  },
+  "_source": ["id"]
+}
+```

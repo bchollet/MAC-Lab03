@@ -1,4 +1,4 @@
-# MAC - Laboratoire 3
+# MAC - Laboratoire 3 - Romano Malo & Chollet Bastian
 
 This request is used for reindexing
 
